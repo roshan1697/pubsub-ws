@@ -1,11 +1,14 @@
-import {createClient} from 'redis'
+import {createClient, RedisClientType} from 'redis'
 
 export class PubSubManager {
     private static instance:PubSubManager
-    private client
+    private client: RedisClientType
+    private subscribe: Map<string, string[]>
+
     constructor () {
         this.client =  createClient()
-        this.client.connect()
+        this.client.connect().catch(err => console.error(err))
+        this.subscribe = new Map()
     }
     static getInstance = () => {
         if(this.instance){
