@@ -16,12 +16,20 @@ export class PubSubManager {
         }
         return this.instance = new PubSubManager()
     }
-
-    addUserSubscription = () =>{
-        
+    handleMessage = (stock:string, message: string) => { console.log('stock: ' + stock + ' message: ' + message)}
+    addUserSubscription = (userId:string , stock:string) =>{
+        if(!this.subscribe.has(stock)){
+            this.subscribe.set(stock, [])
+        }
+        this.subscribe.get(stock)?.push(userId)
+        if(this.subscribe.get(stock)?.length == 1){
+            this.client.SUBSCRIBE(stock,(message)=>{
+                this.handleMessage(stock, message)
+            })
+        }
     }
-    removeUserSubscription = () =>{
-        
+    removeUserSubscription = (stock:string, userId:string) =>{
+        this.subscribe.get(stock)?.filter(id => id == userId).pop()
     }
 
 
