@@ -1,4 +1,4 @@
-import {createClient, RedisClientType} from 'redis'
+import {createClient, type RedisClientType} from 'redis'
 
 export class PubSubManager {
     private static instance:PubSubManager
@@ -16,22 +16,44 @@ export class PubSubManager {
         }
         return this.instance = new PubSubManager()
     }
-    handleMessage = (stock:string, message: string) => { console.log('stock: ' + stock + ' message: ' + message)}
-    addUserSubscription = (userId:string , stock:string) =>{
+    private handleMessage = (stock:string, message: string) => { console.log('stock: ' + stock + ' message: ' + message)}
+    addUserSubscription = (stock:string, userId:string) =>{
         if(!this.subscribe.has(stock)){
             this.subscribe.set(stock, [])
         }
         this.subscribe.get(stock)?.push(userId)
-        if(this.subscribe.get(stock)?.length == 1){
+        if(this.subscribe.get(stock)?.length === 1){
             this.client.SUBSCRIBE(stock,(message)=>{
+                
                 this.handleMessage(stock, message)
             })
         }
     }
     removeUserSubscription = (stock:string, userId:string) =>{
-        this.subscribe.get(stock)?.filter(id => id == userId).pop()
+        this.subscribe.get(stock)?.filter(id => id === userId).pop()
+
+        if(this.subscribe.get(stock)?.length === 0){
+            this.subscribe.delete(stock)
+            this.client.UNSUBSCRIBE(stock, (message)=>{
+                this.handleMessage(stock, message)
+            })
+        }
     }
 
+    removeAllUserSub = (userId:string) => {
+        for (const [key, valuesArray] of this.subscribe.entries()){
+            const filtered = valuesArray.filter(id => id !== userId)
+            if(filtered.length === 0 ){
+                this.subscribe.delete(key)
+                this.client.UNSUBSCRIBE(key, (message)=>{
+                this.handleMessage(key, message)
+            })
+            }
+            else {
+                this.subscribe.set(key,filtered)
+            }
+        }
+    }
 
 
 }
