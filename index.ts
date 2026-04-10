@@ -6,6 +6,7 @@ const wss = new  WebSocketServer({
 })
 
 wss.on('connection', (ws)=>{
+    console.log('ws server started')
     const user = new User()
     ws.on('error', console.error)
 
